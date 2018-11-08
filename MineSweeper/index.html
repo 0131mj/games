@@ -25,7 +25,7 @@
 		}
 		.bomb{
 			background-color: red;
-			color:#FFF;
+			/*color:#FFF;*/
 		}
 	</style>
 </head>
@@ -37,50 +37,109 @@
 	</table>
 <script>
 	
-	/* 지뢰밭 정보 */
-	var boardSize = {
+	/* 게임 세팅 */
+	const boardSize = {
 		w : 10,
 		h : 10
-	}
-	
+	};
+    const bombCnt = 30;
+
+
 	/* 지뢰 정보 */
-	var cellCnt = boardSize.w * boardSize.h;
-	var cellArr = [];
-	for(var i = 0; i < cellCnt; i++){
+	const cellCnt = boardSize.w * boardSize.h;
+
+	let cellArr = [];
+	for(let i = 0; i < cellCnt; i++){
 		cellArr[i] = i;
 	}
-			
-	var bombCnt = 30;
-	var bombArray = new Array();
-	for(var i = 0; i < bombCnt; i++){
-		var randNum = Math.floor(Math.random() * (cellCnt - i));
-		bombArray.push(cellArr[randNum]);
+
+	let bombArr = [];
+	for(let i = 0; i < bombCnt; i++){
+		const randNum = Math.floor(Math.random() * (cellCnt - i));
+		bombArr.push(cellArr[randNum]);
 		cellArr.splice(randNum,1);
 	}
+
+
+	/* 지뢰밭 정보 */
+
+    const boardTable = document.getElementById('board');
+
+    let boardInfo = new Array(cellCnt);
+
+    function getBoardInfo(){
+        /**
+         * 모서리 : 좌상, 우상, 좌하, 우하
+         * 모서리를 제외한 : 윗줄, 이랫줄, 왼줄, 오른줄
+         * 기타 9칸
+         */
+
+            // 1) 칸 구분
+
+        const topLeft = 0; //좌상
+        const topRight = boardSize.w - 1; //우상
+        const bottomLeft = boardSize.w * (boardSize.h - 1);
+        const bottomRight = (boardSize.w * boardSize.h) - 1;
+
+        // cellColoring(topLeft, 'yellow');
+        // cellColoring(topRight, 'yellow');
+        // cellColoring(bottomLeft, 'yellow');
+        // cellColoring(bottomRight, 'yellow');
+
+
+        const top = [];
+        const left = [];
+        const right = [];
+        const bottom = [];
+
+        for(let i = 0; i< boardSize.h; i ++){
+
+            for(let j = 0; j< boardSize.w; j ++){
+                const boxIndex = i*boardSize.w + j;
+                switch (true) {
+					case (boxIndex < 1) :
+                        boardInfo[boxIndex] = 'top';
+                        break;
+                    case (boxIndex === boardSize.w - 1) :
+                        boardInfo[boxIndex] = 'topRight';
+                        break;
+					default:
+						// boardInfo[boxIndex] = 'normal';
+                }
+                // if(boxIndex === 0){
+                //     boardInfo[i] = 'top';
+				// }
+            }
+
+        }
+        console.log(boardInfo);
+    }
+    getBoardInfo();
 		
 	/* 지뢰밭 생성 */
-	var board = ''
-	for(var i = 0; i< boardSize.h; i ++){
+	let board = ''
+	for(let i = 0; i< boardSize.h; i ++){
 		board +='<tr>';
-		for(var j = 0; j< boardSize.w; j ++){
-			var boxIndex = i*boardSize.w + j;
-			var styleClass = '';
-			var textContent = boxIndex;
+		for(let j = 0; j< boardSize.w; j ++){
+			const boxIndex = i*boardSize.w + j;
+			let styleClass = '';
+			let textContent = boxIndex;
 //			var textContent = '🚩';
-			if(bombArray.indexOf(boxIndex) > -1){
+			if(bombArr.indexOf(boxIndex) > -1){
 				styleClass='bomb';
 				textContent = '💣'
 			}
-			if(boxIndex === bombArray[0]){
+			if(boxIndex === bombArr[0]){
 				styleClass='';
 				textContent = '🚩';
 			}
-			board +=`<td data-index="${boxIndex}" class="${styleClass}">${textContent}</td>`;
+			// document.createElement('td');
+			board +="<td data-index='" + boxIndex + "' class='" + styleClass + "'>" + textContent + "</td>";
 		}
 		board +='</tr>';
 	};
 	
-	var boardTable = document.getElementById('board');
+
 	boardTable.innerHTML = board;
 	
 	
@@ -90,7 +149,7 @@
 	})
 	
 	function handleClickCell(index){
-		if(bombArray.indexOf(Number(index)) > -1){
+		if(bombArr.indexOf(Number(index)) > -1){
 			alert('지뢰를 밟았어요');
 		}else{
 			console.log(index);
@@ -100,12 +159,13 @@
 	function rightClick(){
 		
 	}
+
+	function cellColoring(index, bgColor) {
+		const cell = boardTable.querySelector("[data-index='"+index+"']");
+		cell.style.backgroundColor = bgColor
+    }
+
 	
-	function getBoundaryBombCnt(index){
-		/*
-		* 4모서리 /상하좌우/ 중간
-		*/
-	}
 	
 </script>
 </body>
