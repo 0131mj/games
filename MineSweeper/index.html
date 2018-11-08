@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="UTF-8">
+	<title>지뢰찾기</title>
+	<style>
+		body{
+			padding: 50px;
+		}
+		table{
+			border: 15px solid #EEE;
+			border-collapse: collapse;
+		}
+		td{
+			padding:0;
+			margin:0;
+			border-spacing: 0;
+			border:1px solid #DDD;
+			border-collapse: collapse;
+			margin: 0;
+			height:40px;
+			width:40px;
+			text-align: center;
+			cursor:pointer;
+		}
+		.bomb{
+			background-color: red;
+			color:#FFF;
+		}
+	</style>
+</head>
+<body>
+	<table >
+		<tbody id="board">
+			
+		</tbody>
+	</table>
+<script>
+	
+	/* 지뢰밭 정보 */
+	var boardSize = {
+		w : 10,
+		h : 10
+	}
+	
+	/* 지뢰 정보 */
+	var cellCnt = boardSize.w * boardSize.h;
+	var cellArr = [];
+	for(var i = 0; i < cellCnt; i++){
+		cellArr[i] = i;
+	}
+			
+	var bombCnt = 30;
+	var bombArray = new Array();
+	for(var i = 0; i < bombCnt; i++){
+		var randNum = Math.floor(Math.random() * (cellCnt - i));
+		bombArray.push(cellArr[randNum]);
+		cellArr.splice(randNum,1);
+	}
+		
+	/* 지뢰밭 생성 */
+	var board = ''
+	for(var i = 0; i< boardSize.h; i ++){
+		board +='<tr>';
+		for(var j = 0; j< boardSize.w; j ++){
+			var boxIndex = i*boardSize.w + j;
+			var styleClass = '';
+			var textContent = boxIndex;
+//			var textContent = '🚩';
+			if(bombArray.indexOf(boxIndex) > -1){
+				styleClass='bomb';
+				textContent = '💣'
+			}
+			if(boxIndex === bombArray[0]){
+				styleClass='';
+				textContent = '🚩';
+			}
+			board +=`<td data-index="${boxIndex}" class="${styleClass}">${textContent}</td>`;
+		}
+		board +='</tr>';
+	};
+	
+	var boardTable = document.getElementById('board');
+	boardTable.innerHTML = board;
+	
+	
+	/* 클릭 이벤트 */
+	boardTable.addEventListener('click', function(e){
+		handleClickCell(e.target.dataset.index);
+	})
+	
+	function handleClickCell(index){
+		if(bombArray.indexOf(Number(index)) > -1){
+			alert('지뢰를 밟았어요');
+		}else{
+			console.log(index);
+		}
+	}
+	
+	function rightClick(){
+		
+	}
+	
+	function getBoundaryBombCnt(index){
+		/*
+		* 4모서리 /상하좌우/ 중간
+		*/
+	}
+	
+</script>
+</body>
+</html>
