@@ -40,7 +40,7 @@
 	/* 게임 세팅 */
 	const boardSize = {
 		w : 10,
-		h : 10
+		h : 12
 	};
     const bombCnt = 30;
 
@@ -74,47 +74,45 @@
          * 기타 9칸
          */
 
-            // 1) 칸 구분
+        for(let row = 0; row< boardSize.h; row ++){
 
-        const topLeft = 0; //좌상
-        const topRight = boardSize.w - 1; //우상
-        const bottomLeft = boardSize.w * (boardSize.h - 1);
-        const bottomRight = (boardSize.w * boardSize.h) - 1;
+            for(let col = 0; col< boardSize.w; col ++){
 
-        // cellColoring(topLeft, 'yellow');
-        // cellColoring(topRight, 'yellow');
-        // cellColoring(bottomLeft, 'yellow');
-        // cellColoring(bottomRight, 'yellow');
+                const index = row * boardSize.w + col;
 
+                const lastRow = boardSize.h-1;
+                const lastCol = boardSize.w-1;
 
-        const top = [];
-        const left = [];
-        const right = [];
-        const bottom = [];
+                let type = '';
 
-        for(let i = 0; i< boardSize.h; i ++){
+                if(row === 0){
+                    if 		(col === 0)  		type = 'topLeft';
+					else if (col === lastCol) 	type = 'topRight';
+					else						type = 'topLine';
+				}
 
-            for(let j = 0; j< boardSize.w; j ++){
-                const boxIndex = i*boardSize.w + j;
-                switch (true) {
-					case (boxIndex < 1) :
-                        boardInfo[boxIndex] = 'top';
-                        break;
-                    case (boxIndex === boardSize.w - 1) :
-                        boardInfo[boxIndex] = 'topRight';
-                        break;
-					default:
-						// boardInfo[boxIndex] = 'normal';
+				else if(row === lastRow){
+                    if		(col === 0)			type = 'bottomLeft';
+                    else if (col === lastCol) 	type = 'bottomRight';
+                    else						type = 'bottomLine';
                 }
-                // if(boxIndex === 0){
-                //     boardInfo[i] = 'top';
-				// }
+
+                else{
+					if		(col === 0)			type = 'leftLine';
+                    else if (col === lastCol)	type = 'rightLine';
+                    else						type = 'normal';
+				}
+
+                boardInfo[index] = type;
             }
 
-        }
-        console.log(boardInfo);
+        };
     }
     getBoardInfo();
+
+    function getBoundaryCell(){
+
+	}
 		
 	/* 지뢰밭 생성 */
 	let board = ''
