@@ -17,36 +17,39 @@
             border-spacing: 0;
             border:1px solid #DDD;
             border-collapse: collapse;
-            margin: 0;
             height:40px;
             width:40px;
             text-align: center;
             cursor:pointer;
         }
-        .bomb{
+
+        .bomb.opened{
             background-color: red;
             /*color:#FFF;*/
+        }
+        .opened{
+            background-color: #EEE;
+            font-weight: bold;
+            color:green;
+        }
+        .flagged{
+
         }
     </style>
 </head>
 <body>
     <table >
-        <tbody id="board">
-
-        </tbody>
+        <tbody id="board"></tbody>
     </table>
 <script>
 
     /* 게임 세팅 */
-    const boardSize = {
-        w : 10,
-        h : 12
-    };
-    const bombCnt = 30;
-
+    const BW = 10;
+    const BH = 12;
+    const bombCnt = 5;
 
     /* 지뢰 정보 */
-    const cellCnt = boardSize.w * boardSize.h;
+    const cellCnt = BW * BH;
 
     let cellArr = [];
     for(let i = 0; i < cellCnt; i++){
@@ -60,10 +63,7 @@
         cellArr.splice(randNum,1);
     }
 
-
     /* 지뢰밭 정보 */
-
-
 
     let cellData = new Array(cellCnt);
 
@@ -76,31 +76,33 @@
          * 기타 9칸
          */
 
-        for(let row = 0; row< boardSize.h; row ++){
+        const firstRow = 0;
+        const firstCol = 0;
+        const lastRow = BH-1;
+        const lastCol = BW-1;
 
-            for(let col = 0; col< boardSize.w; col ++){
+        let position = '';
 
-                const index = row * boardSize.w + col;
+        for(let row = 0; row< BH; row ++){
 
-                const lastRow = boardSize.h-1;
-                const lastCol = boardSize.w-1;
+            for(let col = 0; col< BW; col ++){
 
-                let position = '';
+                const index = row * BW + col;
 
-                if(row === 0){
-                    if      (col === 0)         position = 'topLeft';
+                if(row === firstRow){
+                    if      (col === firstCol)  position = 'topLeft';
                     else if (col === lastCol)	position = 'topRight';
                     else                        position = 'topLine';
                 }
 
                 else if(row === lastRow){
-                    if      (col === 0)         position = 'bottomLeft';
+                    if      (col === firstCol)  position = 'bottomLeft';
                     else if (col === lastCol)	position = 'bottomRight';
                     else                        position = 'bottomLine';
                 }
 
                 else{
-                    if      (col === 0)         position = 'leftLine';
+                    if      (col === firstCol)  position = 'leftLine';
                     else if (col === lastCol)	position = 'rightLine';
                     else                        position = 'inside';
                 }
@@ -113,32 +115,67 @@
 
     getCellData();
 
-    function getSurroundCell(index){
+    function getSurround(index){
 
         const position = cellData[index];
-        const surroundCell = [];
+        let surround = [];
+
+        const left = index - 1;
+        const right = index + 1;
+        const over = index - BW;
+        const under = index + BW;
+
+        Number.prototype.left = function () {return this - 1};
+        Number.prototype.right = function () {return this + 1};
 
         switch (position) {
             case 'topLeft' :
-                surroundCell.push(1, boardSize.w);
+                surround = [right, under, under.right()];
+                break;
+
+            case 'topRight' :
+                surround = [left, under, under.left()];
+                break;
+
+            case 'bottomLeft' :
+                surround = [over, over.right(), right];
+                break;
+
+            case 'bottomRight' :
+                surround = [left, over, over.left()];
+                break;
+
+            case 'topLine' :
+                surround = [left, right, under, under.left(), under.right()];
+                break;
+
+            case 'bottomLine' :
+                surround = [left, right, over, over.left(), over.right()];
+                break;
+
+            case 'leftLine' :
+                surround = [over, over.right(), right, under, under.right()];
+                break;
+
+            case 'rightLine' :
+                surround = [over, over.left(), left, under, under.left()];
                 break;
 
             default :
-                console.log('inside');
-                break;
-        }
-        return surroundCell;
+                surround = [over.left(), over, over.right(), left, right, under.left(), under, under.right()];
 
+        }
+        return surround;
     }
 
     /* 지뢰밭 생성 */
     const boardTable = document.getElementById('board');
 
     let boardElement = ''
-    for(let i = 0; i< boardSize.h; i ++){
+    for(let i = 0; i< BH; i ++){
         boardElement +='<tr>';
-        for(let j = 0; j< boardSize.w; j ++){
-            const boxIndex = i*boardSize.w + j;
+        for(let j = 0; j< BW; j ++){
+            const boxIndex = i*BW + j;
             let styleClass = '';
             let textContent = boxIndex;
 //			var textContent = '🚩';
@@ -150,8 +187,7 @@
                 styleClass='';
                 textContent = '🚩';
             }
-            // document.createElement('td');
-            boardElement +="<td data-index='" + boxIndex + "' class='" + styleClass + "'>" + textContent + "</td>";
+            boardElement +=`<td data-index="${boxIndex}"></td>`;
         }
         boardElement +='</tr>';
     };
@@ -162,21 +198,61 @@
 
     /* 클릭 이벤트 */
     boardTable.addEventListener('click', function(e){
+        console.log(e);
         handleClickCell(Number(e.target.dataset.index));
     })
 
-    function handleClickCell(index){
-        const surroundCell = getSurroundCell(index);
-        console.log(surroundCell);
+    window.oncontextmenu = (e) =>{rightClick(e)};
 
-        // if(bombArr.indexOf(Number(index)) > -1){
-        //     alert('지뢰를 밟았어요');
-        // }else{
-        //     console.log(index);
-        // }
+    function handleClickCell(index){
+
+        const surroundCell = getSurround(index);
+
+        /* 지뢰인지 확인 */
+        const isBomb = bombArr.some(bombIndex => bombIndex === index);
+        // console.log(isBomb ? 'BOMB!!' : 'No bomb');
+
+        /* 지뢰갯수 확인 */
+        const bombCnt =  surroundCell.reduce((acc, cur, i, surround) => {
+            let bombCnt = bombArr.some(bombNum => bombNum === surround[i]) ? 1: 0;
+            return acc + bombCnt;
+        }, 0);
+        // console.log(bombCnt)
+
+        const selectedCell = boardTable.querySelector(`[data-index="${index}"]`);
+
+        if(isBomb){
+            selectedCell.innerHTML = '💣';
+            selectedCell.classList.add('bomb');
+        }
+        else if(bombCnt === 0){
+            surroundCell.forEach(item => openCell(item))
+        }
+
+        else{
+            selectedCell.innerHTML = `${bombCnt}`;
+        }
+        selectedCell.classList.add('opened');
     }
 
-    function rightClick(){
+    function openCell(index) {
+        const selectedCell = boardTable.querySelector(`[data-index="${index}"]`);
+        selectedCell.classList.add('opened');
+    }
+
+    function rightClick(e){
+
+        if(e.target.nodeName !== 'TD') return;
+
+        e.preventDefault();
+        const selectedCell = e.target;
+
+        let content = '🚩';
+        if(selectedCell.textContent === '🚩'){
+            content = '';
+        }
+        selectedCell.innerHTML = content;
+        selectedCell.classList.toggle('flagged');
 
     }
 
