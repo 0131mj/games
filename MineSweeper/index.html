@@ -1,76 +1,78 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-	<meta charset="UTF-8">
-	<title>지뢰찾기</title>
-	<style>
-		body{
-			padding: 50px;
-		}
-		table{
-			border: 15px solid #EEE;
-			border-collapse: collapse;
-		}
-		td{
-			padding:0;
-			margin:0;
-			border-spacing: 0;
-			border:1px solid #DDD;
-			border-collapse: collapse;
-			margin: 0;
-			height:40px;
-			width:40px;
-			text-align: center;
-			cursor:pointer;
-		}
-		.bomb{
-			background-color: red;
-			/*color:#FFF;*/
-		}
-	</style>
+    <meta charset="UTF-8">
+    <title>지뢰찾기</title>
+    <style>
+        body{
+            padding: 50px;
+        }
+        table{
+            border: 15px solid #EEE;
+            border-collapse: collapse;
+        }
+        td{
+            padding:0;
+            margin:0;
+            border-spacing: 0;
+            border:1px solid #DDD;
+            border-collapse: collapse;
+            margin: 0;
+            height:40px;
+            width:40px;
+            text-align: center;
+            cursor:pointer;
+        }
+        .bomb{
+            background-color: red;
+            /*color:#FFF;*/
+        }
+    </style>
 </head>
 <body>
-	<table >
-		<tbody id="board">
-			
-		</tbody>
-	</table>
+    <table >
+        <tbody id="board">
+
+        </tbody>
+    </table>
 <script>
-	
-	/* 게임 세팅 */
-	const boardSize = {
-		w : 10,
-		h : 12
-	};
+
+    /* 게임 세팅 */
+    const boardSize = {
+        w : 10,
+        h : 12
+    };
     const bombCnt = 30;
 
 
-	/* 지뢰 정보 */
-	const cellCnt = boardSize.w * boardSize.h;
+    /* 지뢰 정보 */
+    const cellCnt = boardSize.w * boardSize.h;
 
-	let cellArr = [];
-	for(let i = 0; i < cellCnt; i++){
-		cellArr[i] = i;
-	}
+    let cellArr = [];
+    for(let i = 0; i < cellCnt; i++){
+        cellArr[i] = i;
+    }
 
-	let bombArr = [];
-	for(let i = 0; i < bombCnt; i++){
-		const randNum = Math.floor(Math.random() * (cellCnt - i));
-		bombArr.push(cellArr[randNum]);
-		cellArr.splice(randNum,1);
-	}
+    let bombArr = [];
+    for(let i = 0; i < bombCnt; i++){
+        const randNum = Math.floor(Math.random() * (cellCnt - i));
+        bombArr.push(cellArr[randNum]);
+        cellArr.splice(randNum,1);
+    }
 
 
-	/* 지뢰밭 정보 */
+    /* 지뢰밭 정보 */
 
-    const boardTable = document.getElementById('board');
 
-    let boardInfo = new Array(cellCnt);
 
-    function getBoardInfo(){
+    let cellData = new Array(cellCnt);
+
+    function getCellData(){
+
         /**
+         * 위치 타입
          * 모서리 : 좌상, 우상, 좌하, 우하
-         * 모서리를 제외한 : 윗줄, 이랫줄, 왼줄, 오른줄
+         * 모서리를 제외한 줄 라인: 윗줄, 이랫줄, 왼줄, 오른줄
          * 기타 9칸
          */
 
@@ -83,88 +85,108 @@
                 const lastRow = boardSize.h-1;
                 const lastCol = boardSize.w-1;
 
-                let type = '';
+                let position = '';
 
                 if(row === 0){
-                    if 		(col === 0)  		type = 'topLeft';
-					else if (col === lastCol) 	type = 'topRight';
-					else						type = 'topLine';
-				}
+                    if      (col === 0)         position = 'topLeft';
+                    else if (col === lastCol)	position = 'topRight';
+                    else                        position = 'topLine';
+                }
 
-				else if(row === lastRow){
-                    if		(col === 0)			type = 'bottomLeft';
-                    else if (col === lastCol) 	type = 'bottomRight';
-                    else						type = 'bottomLine';
+                else if(row === lastRow){
+                    if      (col === 0)         position = 'bottomLeft';
+                    else if (col === lastCol)	position = 'bottomRight';
+                    else                        position = 'bottomLine';
                 }
 
                 else{
-					if		(col === 0)			type = 'leftLine';
-                    else if (col === lastCol)	type = 'rightLine';
-                    else						type = 'normal';
-				}
+                    if      (col === 0)         position = 'leftLine';
+                    else if (col === lastCol)	position = 'rightLine';
+                    else                        position = 'inside';
+                }
 
-                boardInfo[index] = type;
+                cellData[index] = position;
             }
 
         };
     }
-    getBoardInfo();
 
-    function getBoundaryCell(){
+    getCellData();
 
-	}
-		
-	/* 지뢰밭 생성 */
-	let board = ''
-	for(let i = 0; i< boardSize.h; i ++){
-		board +='<tr>';
-		for(let j = 0; j< boardSize.w; j ++){
-			const boxIndex = i*boardSize.w + j;
-			let styleClass = '';
-			let textContent = boxIndex;
-//			var textContent = '🚩';
-			if(bombArr.indexOf(boxIndex) > -1){
-				styleClass='bomb';
-				textContent = '💣'
-			}
-			if(boxIndex === bombArr[0]){
-				styleClass='';
-				textContent = '🚩';
-			}
-			// document.createElement('td');
-			board +="<td data-index='" + boxIndex + "' class='" + styleClass + "'>" + textContent + "</td>";
-		}
-		board +='</tr>';
-	};
-	
+    function getSurroundCell(index){
 
-	boardTable.innerHTML = board;
-	
-	
-	/* 클릭 이벤트 */
-	boardTable.addEventListener('click', function(e){
-		handleClickCell(e.target.dataset.index);
-	})
-	
-	function handleClickCell(index){
-		if(bombArr.indexOf(Number(index)) > -1){
-			alert('지뢰를 밟았어요');
-		}else{
-			console.log(index);
-		}
-	}
-	
-	function rightClick(){
-		
-	}
+        const position = cellData[index];
+        const surroundCell = [];
 
-	function cellColoring(index, bgColor) {
-		const cell = boardTable.querySelector("[data-index='"+index+"']");
-		cell.style.backgroundColor = bgColor
+        switch (position) {
+            case 'topLeft' :
+                surroundCell.push(1, boardSize.w);
+                break;
+
+            default :
+                console.log('inside');
+                break;
+        }
+        return surroundCell;
+
     }
 
-	
-	
+    /* 지뢰밭 생성 */
+    const boardTable = document.getElementById('board');
+
+    let boardElement = ''
+    for(let i = 0; i< boardSize.h; i ++){
+        boardElement +='<tr>';
+        for(let j = 0; j< boardSize.w; j ++){
+            const boxIndex = i*boardSize.w + j;
+            let styleClass = '';
+            let textContent = boxIndex;
+//			var textContent = '🚩';
+            if(bombArr.indexOf(boxIndex) > -1){
+                styleClass='bomb';
+                textContent = '💣'
+            }
+            if(boxIndex === bombArr[0]){
+                styleClass='';
+                textContent = '🚩';
+            }
+            // document.createElement('td');
+            boardElement +="<td data-index='" + boxIndex + "' class='" + styleClass + "'>" + textContent + "</td>";
+        }
+        boardElement +='</tr>';
+    };
+
+
+    boardTable.innerHTML = boardElement;
+
+
+    /* 클릭 이벤트 */
+    boardTable.addEventListener('click', function(e){
+        handleClickCell(Number(e.target.dataset.index));
+    })
+
+    function handleClickCell(index){
+        const surroundCell = getSurroundCell(index);
+        console.log(surroundCell);
+
+        // if(bombArr.indexOf(Number(index)) > -1){
+        //     alert('지뢰를 밟았어요');
+        // }else{
+        //     console.log(index);
+        // }
+    }
+
+    function rightClick(){
+
+    }
+
+    function cellColoring(index, bgColor) {
+        const cell = boardTable.querySelector("[data-index='"+index+"']");
+        cell.style.backgroundColor = bgColor
+    }
+
+
+
 </script>
 </body>
 </html>
