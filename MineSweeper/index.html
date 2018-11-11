@@ -6,10 +6,12 @@
     <style>
         body{
             padding: 50px;
+            text-align: center;
         }
         table{
             border: 15px solid #DDD;
             border-collapse: collapse;
+            margin: 0 auto;
         }
         td{
             padding:0;
@@ -35,13 +37,14 @@
         .flagged{
 
         }
+        #game-status{
+            font-weight: bold;
+            font-size: 2rem;
+        }
     </style>
 </head>
 <body>
-    <div>
-
-    </div>
-    <table >
+    <table>
         <tbody id="board"></tbody>
     </table>
     <p id="game-status"></p>
@@ -206,7 +209,8 @@
     let isGameOver = false;
 
     function gameOver(){
-        document.getElementById('game-status').innerText = 'Game Over !!';
+        isGameOver = true;
+        document.getElementById('game-status').innerText = 'GAME OVER !!';
     }
 
     function hasClass(index, className) {
@@ -231,24 +235,39 @@
         if(isGameOver){
             gameOver();
         }
+
+        return(isGameOver);
     };
 
 
 
     /* 좌클릭 이벤트 */
     boardTable.addEventListener('click', function(e){
+
+        // debugger;
+        const index = Number(e.target.dataset.index);
+
+        const isGameOver = checkIsGameOver();
+        if(isGameOver){
+            console.log('over')
+            return;
+        }else{
+            console.log('not over')
+            cellOpenRequest(index);
+        }
+
         if( e.target.classList.contains('opened') ) return;
         if( e.target.classList.contains('flagged') ) return;
 
-        const index = Number(e.target.dataset.index);
 
         if( isBomb(index) ) {console.log( isBomb(index) ? 'BOMB!!' : 'No bomb');} // 나중에 cellOpenRequest 안으로 이동 고려
 
-        checkIsGameOver();
-        if(isGameOver){
-           return;
-        }
-        cellOpenRequest(index);
+
+
+        console.log('isGameOver :', isGameOver);
+
+
+
     });
 
 
@@ -304,7 +323,7 @@
         /** 연쇄 오픈 실행 */
         if(surroundBombCnt === 0 && !allOpened){
             surroundCells.forEach(
-                item => { cellOpenRequest(item, 'computer')}
+                item => { if(!isGameOver)cellOpenRequest(item, 'computer')}
             );
         }
     }
