@@ -8,7 +8,7 @@
             padding: 50px;
         }
         table{
-            border: 15px solid #EEE;
+            border: 15px solid #DDD;
             border-collapse: collapse;
         }
         td{
@@ -23,7 +23,7 @@
             cursor:pointer;
         }
 
-        .bomb.opened{
+        .bomb{
             background-color: red;
             /*color:#FFF;*/
         }
@@ -38,15 +38,19 @@
     </style>
 </head>
 <body>
+    <div>
+
+    </div>
     <table >
         <tbody id="board"></tbody>
     </table>
+    <p id="game-status"></p>
 <script>
 
     /* 게임 세팅 */
     const BW = 10;
     const BH = 12;
-    const bombCnt = 5;
+    const bombCnt = 10;
 
     /* 지뢰 정보 */
     const cellCnt = BW * BH;
@@ -90,21 +94,21 @@
                 const index = row * BW + col;
 
                 if(row === firstRow){
-                    if      (col === firstCol)  position = 'topLeft';
-                    else if (col === lastCol)	position = 'topRight';
-                    else                        position = 'topLine';
+                    if      (col === firstCol)  position = 'TOP_LEFT';
+                    else if (col === lastCol)	position = 'TOP_RIGHT';
+                    else                        position = 'TOP_LINE';
                 }
 
                 else if(row === lastRow){
-                    if      (col === firstCol)  position = 'bottomLeft';
-                    else if (col === lastCol)	position = 'bottomRight';
-                    else                        position = 'bottomLine';
+                    if      (col === firstCol)  position = 'BOTTOM_LEFT';
+                    else if (col === lastCol)	position = 'BOTTOM_RIGHT';
+                    else                        position = 'BOTTOM_LINE';
                 }
 
                 else{
-                    if      (col === firstCol)  position = 'leftLine';
-                    else if (col === lastCol)	position = 'rightLine';
-                    else                        position = 'inside';
+                    if      (col === firstCol)  position = 'LEFT_LINE';
+                    else if (col === lastCol)	position = 'RIGHT_LINE';
+                    else                        position = 'INSIDE';
                 }
 
                 cellData[index] = position;
@@ -129,35 +133,35 @@
         Number.prototype.right = function () {return this + 1};
 
         switch (position) {
-            case 'topLeft' :
+            case 'TOP_LEFT' :
                 surround = [right, under, under.right()];
                 break;
 
-            case 'topRight' :
+            case 'TOP_RIGHT' :
                 surround = [left, under, under.left()];
                 break;
 
-            case 'bottomLeft' :
+            case 'BOTTOM_LEFT' :
                 surround = [over, over.right(), right];
                 break;
 
-            case 'bottomRight' :
+            case 'BOTTOM_RIGHT' :
                 surround = [left, over, over.left()];
                 break;
 
-            case 'topLine' :
+            case 'TOP_LINE' :
                 surround = [left, right, under, under.left(), under.right()];
                 break;
 
-            case 'bottomLine' :
+            case 'BOTTOM_LINE' :
                 surround = [left, right, over, over.left(), over.right()];
                 break;
 
-            case 'leftLine' :
+            case 'LEFT_LINE' :
                 surround = [over, over.right(), right, under, under.right()];
                 break;
 
-            case 'rightLine' :
+            case 'RIGHT_LINE' :
                 surround = [over, over.left(), left, under, under.left()];
                 break;
 
@@ -196,52 +200,123 @@
     boardTable.innerHTML = boardElement;
 
 
-    /* 클릭 이벤트 */
+
+    const isBomb = (index) => { return bombArr.some(bombIndex => bombIndex === index)}
+
+    let isGameOver = false;
+
+    function gameOver(){
+        document.getElementById('game-status').innerText = 'Game Over !!';
+    }
+
+    function hasClass(index, className) {
+        return boardTable.querySelector(`[data-index="${index}"]`).classList.contains(className)
+    }
+
+    const checkIsGameOver = () =>{
+
+        let openedCellCnt = 0;
+        let flaggedCellCnt = 0;
+
+        for(let i = 0; i < cellCnt; i++){
+            if(hasClass(i,'opened')){openedCellCnt++;}
+        }
+
+        for(let i = 0; i < cellCnt; i++){
+            if(hasClass(i,'flagged')){flaggedCellCnt++;}
+        }
+
+        isGameOver = (flaggedCellCnt === bombArr.length) && bombArr.length + openedCellCnt === cellCnt;
+
+        if(isGameOver){
+            gameOver();
+        }
+    };
+
+
+
+    /* 좌클릭 이벤트 */
     boardTable.addEventListener('click', function(e){
-        console.log(e);
-        handleClickCell(Number(e.target.dataset.index));
-    })
+        if( e.target.classList.contains('opened') ) return;
+        if( e.target.classList.contains('flagged') ) return;
 
-    window.oncontextmenu = (e) =>{rightClick(e)};
+        const index = Number(e.target.dataset.index);
 
-    function handleClickCell(index){
+        if( isBomb(index) ) {console.log( isBomb(index) ? 'BOMB!!' : 'No bomb');} // 나중에 cellOpenRequest 안으로 이동 고려
 
-        const surroundCell = getSurround(index);
+        checkIsGameOver();
+        if(isGameOver){
+           return;
+        }
+        cellOpenRequest(index);
+    });
 
-        /* 지뢰인지 확인 */
-        const isBomb = bombArr.some(bombIndex => bombIndex === index);
-        // console.log(isBomb ? 'BOMB!!' : 'No bomb');
+
+    function cellOpenRequest(index, requester){
+
+        checkIsGameOver();
+
+        const selectedCell = boardTable.querySelector(`[data-index="${index}"]`);
+
+        if(selectedCell.classList.contains('opened')) return;
+
+
+        /** 오픈 가능 여부 판단  */
+        /* 컴퓨터의 요청(자동 연쇄오픈)이면, 폭탄셀일 경우 열지 않음 */
+        if(requester === 'computer'){
+            if(isBomb(index)) return;
+        }
+
+
+
+        /** 오픈 실행  */
 
         /* 지뢰갯수 확인 */
-        const bombCnt =  surroundCell.reduce((acc, cur, i, surround) => {
-            let bombCnt = bombArr.some(bombNum => bombNum === surround[i]) ? 1: 0;
-            return acc + bombCnt;
-        }, 0);
-        // console.log(bombCnt)
+        const surroundCells = getSurround(index);
+        
+        let surroundBombCnt = 0;
+        let surroundOpenedCnt = 0;
 
-        const selectedCell = boardTable.querySelector(`[data-index="${index}"]`);
+        surroundCells.forEach(index => {
+            if(bombArr.some(bombNum => bombNum === index)){
+                surroundBombCnt ++;
+            }
 
-        if(isBomb){
+            const cell = boardTable.querySelector(`[data-index="${index}"]`);
+            if(cell.classList.contains('opened')){
+                surroundOpenedCnt++;
+            }
+        });
+
+
+        if(isBomb(index)){
             selectedCell.innerHTML = '💣';
             selectedCell.classList.add('bomb');
+            gameOver();
+            return;
+        }else{
+            selectedCell.innerHTML = `${surroundBombCnt !== 0 ? surroundBombCnt : '' }`;
+            selectedCell.classList.add('opened');
         }
-        else if(bombCnt === 0){
-            surroundCell.forEach(item => openCell(item))
-        }
+        
+        const allOpened = surroundBombCnt + surroundOpenedCnt === surroundCells.length;
 
-        else{
-            selectedCell.innerHTML = `${bombCnt}`;
+        /** 연쇄 오픈 실행 */
+        if(surroundBombCnt === 0 && !allOpened){
+            surroundCells.forEach(
+                item => { cellOpenRequest(item, 'computer')}
+            );
         }
-        selectedCell.classList.add('opened');
     }
 
-    function openCell(index) {
-        const selectedCell = boardTable.querySelector(`[data-index="${index}"]`);
-        selectedCell.classList.add('opened');
+    function clickBomb(){
+        // openBomb;
+        // openOthers;
     }
 
-    function rightClick(e){
 
+    /* 우클릭 이벤트 */
+    window.oncontextmenu = (e) =>{
         if(e.target.nodeName !== 'TD') return;
 
         e.preventDefault();
@@ -254,14 +329,8 @@
         selectedCell.innerHTML = content;
         selectedCell.classList.toggle('flagged');
 
-    }
-
-    function cellColoring(index, bgColor) {
-        const cell = boardTable.querySelector("[data-index='"+index+"']");
-        cell.style.backgroundColor = bgColor
-    }
-
-
+        checkIsGameOver();
+    };
 
 </script>
 </body>
