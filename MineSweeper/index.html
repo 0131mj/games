@@ -54,28 +54,33 @@
     const BW = 10;
     const BH = 12;
     const bombCnt = 10;
-
-    /* 지뢰 정보 */
     const cellCnt = BW * BH;
 
-    let cellArr = [];
-    for(let i = 0; i < cellCnt; i++){
-        cellArr[i] = i;
-    }
+
+
+    /* 지뢰 정보 */
 
     let bombArr = [];
-    for(let i = 0; i < bombCnt; i++){
-        const randNum = Math.floor(Math.random() * (cellCnt - i));
-        bombArr.push(cellArr[randNum]);
-        cellArr.splice(randNum,1);
-    }
+
+    (() =>{
+        let tempArr = [];
+        for(let i = 0; i < cellCnt; i++){
+            tempArr[i] = i;
+        }
+        for(let i = 0; i < bombCnt; i++){
+            const randNum = Math.floor(Math.random() * (cellCnt - i));
+            bombArr.push(tempArr[randNum]);
+            tempArr.splice(randNum,1);
+        }
+    })();
+
+
 
     /* 지뢰밭 정보 */
 
     let cellData = new Array(cellCnt);
 
-    function getCellData(){
-
+    (()=>{
         /**
          * 위치 타입
          * 모서리 : 좌상, 우상, 좌하, 우하
@@ -116,11 +121,25 @@
 
                 cellData[index] = position;
             }
+        }
+    })();
 
-        };
-    }
+    /* 지뢰밭 생성 */
+    const boardTable = document.getElementById('board');
 
-    getCellData();
+    let boardElement = '';
+    (()=>{
+        for(let i = 0; i< BH; i ++){
+            boardElement +='<tr>';
+            for(let j = 0; j< BW; j ++){
+                const boxIndex = i*BW + j;
+                boardElement +=`<td data-index="${boxIndex}"></td>`;
+            }
+            boardElement +='</tr>';
+        }
+        boardTable.innerHTML = boardElement;
+    })();
+
 
     function getSurround(index){
 
@@ -175,38 +194,13 @@
         return surround;
     }
 
-    /* 지뢰밭 생성 */
-    const boardTable = document.getElementById('board');
 
-    let boardElement = ''
-    for(let i = 0; i< BH; i ++){
-        boardElement +='<tr>';
-        for(let j = 0; j< BW; j ++){
-            const boxIndex = i*BW + j;
-            let styleClass = '';
-            let textContent = boxIndex;
-//			var textContent = '🚩';
-            if(bombArr.indexOf(boxIndex) > -1){
-                styleClass='bomb';
-                textContent = '💣'
-            }
-            if(boxIndex === bombArr[0]){
-                styleClass='';
-                textContent = '🚩';
-            }
-            boardElement +=`<td data-index="${boxIndex}"></td>`;
-        }
-        boardElement +='</tr>';
-    };
-
-
-    boardTable.innerHTML = boardElement;
-
-
-
-    const isBomb = (index) => { return bombArr.some(bombIndex => bombIndex === index)}
 
     let isGameOver = false;
+
+    function isBomb(index) {
+        return bombArr.some(bombIndex => bombIndex === index)
+    }
 
     function gameOver(){
         isGameOver = true;
@@ -217,7 +211,7 @@
         return boardTable.querySelector(`[data-index="${index}"]`).classList.contains(className)
     }
 
-    const checkIsGameOver = () =>{
+    function checkIsGameOver (){
 
         let openedCellCnt = 0;
         let flaggedCellCnt = 0;
@@ -230,15 +224,34 @@
             if(hasClass(i,'flagged')){flaggedCellCnt++;}
         }
 
-        isGameOver = (flaggedCellCnt === bombArr.length) && bombArr.length + openedCellCnt === cellCnt;
+        if(!isGameOver){
+            isGameOver = (flaggedCellCnt === bombArr.length) && bombArr.length + openedCellCnt === cellCnt;
+        }
 
         if(isGameOver){
             gameOver();
         }
 
         return(isGameOver);
-    };
+    }
 
+
+    /* 우클릭 이벤트 */
+    window.oncontextmenu = (e) =>{
+        if(e.target.nodeName !== 'TD') return;
+
+        e.preventDefault();
+        const selectedCell = e.target;
+
+        let content = '🚩';
+        if(selectedCell.textContent === '🚩'){
+            content = '';
+        }
+        selectedCell.innerHTML = content;
+        selectedCell.classList.toggle('flagged');
+
+        checkIsGameOver();
+    };
 
 
     /* 좌클릭 이벤트 */
@@ -262,11 +275,7 @@
 
         if( isBomb(index) ) {console.log( isBomb(index) ? 'BOMB!!' : 'No bomb');} // 나중에 cellOpenRequest 안으로 이동 고려
 
-
-
         console.log('isGameOver :', isGameOver);
-
-
 
     });
 
@@ -285,8 +294,6 @@
         if(requester === 'computer'){
             if(isBomb(index)) return;
         }
-
-
 
         /** 오픈 실행  */
 
@@ -334,22 +341,7 @@
     }
 
 
-    /* 우클릭 이벤트 */
-    window.oncontextmenu = (e) =>{
-        if(e.target.nodeName !== 'TD') return;
 
-        e.preventDefault();
-        const selectedCell = e.target;
-
-        let content = '🚩';
-        if(selectedCell.textContent === '🚩'){
-            content = '';
-        }
-        selectedCell.innerHTML = content;
-        selectedCell.classList.toggle('flagged');
-
-        checkIsGameOver();
-    };
 
 </script>
 </body>
