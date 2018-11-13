@@ -53,8 +53,9 @@
     /* 게임 세팅 */
     const BW = 10;
     const BH = 12;
-    const bombCnt = 10;
+    const bombCnt = 3;
     const cellCnt = BW * BH;
+
 
 
 
@@ -140,6 +141,13 @@
         boardTable.innerHTML = boardElement;
     })();
 
+    function cellElement(index) {
+        return boardTable.querySelector(`[data-index="${index}"]`);
+    }
+
+    function hasClass(index, className) {
+        return cellElement(index).classList.contains(className)
+    }
 
     function getSurround(index){
 
@@ -195,20 +203,21 @@
     }
 
 
-
-    let isGameOver = false;
-
     function isBomb(index) {
         return bombArr.some(bombIndex => bombIndex === index)
     }
 
+    let isGameOver = false;
+    let isWin = false;
+
     function gameOver(){
         isGameOver = true;
-        document.getElementById('game-status').innerText = 'GAME OVER !!';
-    }
+        let resultText = 'GAME OVER !!';
+        if(isWin) {
+            resultText = 'You Win';
+        }
 
-    function hasClass(index, className) {
-        return boardTable.querySelector(`[data-index="${index}"]`).classList.contains(className)
+        document.getElementById('game-status').innerText = resultText;
     }
 
     function checkIsGameOver (){
@@ -225,10 +234,10 @@
         }
 
         if(!isGameOver){
-            isGameOver = (flaggedCellCnt === bombArr.length) && bombArr.length + openedCellCnt === cellCnt;
+            isWin = (flaggedCellCnt === bombArr.length) && bombArr.length + openedCellCnt === cellCnt;
         }
 
-        if(isGameOver){
+        if(isWin){
             gameOver();
         }
 
@@ -238,7 +247,9 @@
 
     /* 우클릭 이벤트 */
     window.oncontextmenu = (e) =>{
-        if(e.target.nodeName !== 'TD') return;
+        if(isGameOver) return;
+        if( e.target.nodeName !== 'TD' ) return;
+        if( e.target.classList.contains('opened') ) return;
 
         e.preventDefault();
         const selectedCell = e.target;
@@ -256,44 +267,23 @@
 
     /* 좌클릭 이벤트 */
     boardTable.addEventListener('click', function(e){
-
-        // debugger;
-        const index = Number(e.target.dataset.index);
-
-        const isGameOver = checkIsGameOver();
-        if(isGameOver){
-            console.log('over')
-            return;
-        }else{
-            console.log('not over')
-            cellOpenRequest(index);
-        }
-
-        if( e.target.classList.contains('opened') ) return;
+        if(isGameOver)return;
+//        if( e.target.classList.contains('opened') ) return;
         if( e.target.classList.contains('flagged') ) return;
-
-
-        if( isBomb(index) ) {console.log( isBomb(index) ? 'BOMB!!' : 'No bomb');} // 나중에 cellOpenRequest 안으로 이동 고려
-
-        console.log('isGameOver :', isGameOver);
+        
+        const index = Number(e.target.dataset.index);
+        cellOpenRequest(index, false);
 
     });
 
 
-    function cellOpenRequest(index, requester){
+    function cellOpenRequest(index, isAutoSurroundOpen){
 
-        checkIsGameOver();
-
-        const selectedCell = boardTable.querySelector(`[data-index="${index}"]`);
-
+        const selectedCell = cellElement(index);
         if(selectedCell.classList.contains('opened')) return;
 
-
         /** 오픈 가능 여부 판단  */
-        /* 컴퓨터의 요청(자동 연쇄오픈)이면, 폭탄셀일 경우 열지 않음 */
-        if(requester === 'computer'){
-            if(isBomb(index)) return;
-        }
+        if(isAutoSurroundOpen && isBomb(index))return; /* 컴퓨터의 요청(자동 연쇄오픈)이면, 폭탄셀일 경우 열지 않음 */
 
         /** 오픈 실행  */
 
@@ -304,25 +294,24 @@
         let surroundOpenedCnt = 0;
 
         surroundCells.forEach(index => {
+
             if(bombArr.some(bombNum => bombNum === index)){
                 surroundBombCnt ++;
             }
 
-            const cell = boardTable.querySelector(`[data-index="${index}"]`);
-            if(cell.classList.contains('opened')){
+            if(hasClass(index, 'opened')){
                 surroundOpenedCnt++;
             }
         });
 
 
         if(isBomb(index)){
-            selectedCell.innerHTML = '💣';
-            selectedCell.classList.add('bomb');
-            gameOver();
-            return;
+            clickBomb(index);
+//            return;
         }else{
             selectedCell.innerHTML = `${surroundBombCnt !== 0 ? surroundBombCnt : '' }`;
             selectedCell.classList.add('opened');
+            checkIsGameOver();
         }
         
         const allOpened = surroundBombCnt + surroundOpenedCnt === surroundCells.length;
@@ -330,12 +319,28 @@
         /** 연쇄 오픈 실행 */
         if(surroundBombCnt === 0 && !allOpened){
             surroundCells.forEach(
-                item => { if(!isGameOver)cellOpenRequest(item, 'computer')}
+                item => { if(!isGameOver)cellOpenRequest(item, true)}
             );
         }
     }
 
-    function clickBomb(){
+
+
+    function clickBomb(index){
+
+
+        // 모든지뢰 열기,
+        // 선택한 지뢰는 백그라운드 빨간색,
+        // 깃발이 꽂혀있었다면 깃발 엑스 ❌
+
+        for(let i = 0; i < cellCnt; i++){
+            if(bombArr.indexOf(i) > -1){
+                const selectedCell = cellElement(i);
+                selectedCell.innerHTML = '💣';
+                selectedCell.classList.add('bomb');
+            }
+        }
+        gameOver();
         // openBomb;
         // openOthers;
     }
