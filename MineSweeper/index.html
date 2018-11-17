@@ -2,11 +2,17 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>지뢰찾기</title>
     <style>
+        @import url(https://fonts.googleapis.com/earlyaccess/notosanskr.css);
+
         body{
-            padding: 50px;
+            padding: 0.5rem;
             text-align: center;
+            font-family: 'Noto Sans KR', sans-serif;
         }
         table{
             border: 15px solid #DDD;
@@ -19,10 +25,11 @@
             border-spacing: 0;
             border:1px solid #DDD;
             border-collapse: collapse;
-            height:30px;
-            width:30px;
+            height:1.8rem;
+            width:1.8rem;
             text-align: center;
             cursor:pointer;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .bomb{
@@ -44,6 +51,39 @@
             font-weight: bold;
             font-size: 1.5rem;
         }
+
+        #btn-group{
+            margin: 1.5rem 0;
+        }
+        button{
+            color: #555;
+            border:1px solid #DDD;
+            box-shadow: none;
+            background-color: #EEE;
+            padding:0.5rem 2rem;
+            border-radius: 1rem;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button.on{
+            color: #000;
+            background-color: #FFF;
+        }
+
+        button:focus {outline:0;}
+
+        #reset{
+            visibility: hidden;
+            height: 2rem;
+            display: block;
+            margin: 0 auto;
+            border-radius: 1rem;
+
+            background-color: red;
+            color: #FFF;
+            border: 0;
+        }
     </style>
 </head>
 <body>
@@ -51,16 +91,38 @@
     <table>
         <tbody id="board"></tbody>
     </table>
+    <div id="btn-group">
+        <button id="open" class="on">OPEN</button>
+        <button id="flag">FLAG</button>
+    </div>
     <p id="game-status"></p>
+    <button id="reset" onClick="window.location.reload()">
+        Try Again!!
+    </button>
 <script>
+
+    let isMobile = false;
+    let mobileBtn = 'open'; // open, flag
+
+    window.onload = function () {
+        isMobile = typeof window.orientation !== 'undefined';
+    };
+
+    const btnGroup = document.getElementById('btn-group');
+    btnGroup.addEventListener('click', function (event) {
+        const btnArray = Array.from(btnGroup.children);
+        btnArray.map(node => node.classList.remove('on'));
+
+        event.target.classList.add('on');
+        mobileBtn = event.target.id;
+    });
+
 
     /* 게임 세팅 */
     const BW = 10;
     const BH = 12;
     const bombCnt = 15;
     const cellCnt = BW * BH;
-
-
 
 
     /* 지뢰 정보 */
@@ -170,9 +232,9 @@
         const position = cellData[index];
         let surround = [];
 
-        const left = index - 1;
+        const left  = index - 1;
         const right = index + 1;
-        const over = index - BW;
+        const over  = index - BW;
         const under = index + BW;
 
         Number.prototype.left = function () {return this - 1};
@@ -223,9 +285,12 @@
         return bombArr.some(bombIndex => bombIndex === index)
     }
 
+    /**
+     * GAME STATUS
+     * */
+
     let isGameOver = false;
     let isWin = false;
-
 
     let gameStatus = 0;
 
@@ -249,7 +314,7 @@
         }
 
         setGameStatus();
-
+        document.getElementById('reset').style.visibility = 'visible';
     }
 
     function checkIsGameOver (){
@@ -279,6 +344,10 @@
 
     /* 우클릭 이벤트 */
     window.oncontextmenu = (e) =>{
+        this.flag(e);
+    };
+
+    function flag(e) {
         if(isGameOver) return;
         if(gameStatus !== 1){
             gameStatus = 1;
@@ -299,11 +368,16 @@
 
         setFlagCount();
         checkIsGameOver();
-    };
+    }
 
 
     /* 좌클릭 이벤트 */
     boardTable.addEventListener('click', function(e){
+
+        if(mobileBtn === 'flag'){
+            flag(e);
+            return;
+        }
 
         if(isGameOver)return;
         if(gameStatus !== 1){

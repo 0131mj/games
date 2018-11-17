@@ -10,19 +10,24 @@
 <body>
 <script>
     const O = true;
-    const X = false
-    const shape = {
-        "LONG" : [
-            [O],
-            [O],
-            [O],
-            [O],
-            [X]
+    const X = false;
+    const shapes = {
+        "I" : [
+            [X,X,O,X,X],
+            [X,X,O,X,X],
+            [X,X,O,X,X],
+            [X,X,O,X,X],
+            [X,X,X,X,X],
         ],
         "T" : [
             [O,O,O],
             [X,O,X],
             [X,O,X],
+        ],
+        "Z" : [
+            [O,O,X],
+            [X,O,X],
+            [X,O,O],
         ]
     }
 
@@ -31,13 +36,54 @@
         moveRight : () => {},
         moveDown  : () => {},
 
-        turnRight : () => {},
+        turnRight : () => { if(!this.isOverLap){}},
         turnLeft  : () => {},
-    }
 
-    {
+        removeLine : () => {},
+    };
 
-    }
+    const keyMap = {
+
+    };
+
+    const isOverLap = () => {
+        return true;
+    };
+
+    const flow = () => {
+
+    };
+
+    function getRandomShape (){
+
+        const randomNum = Math.ceil(Math.random() * );
+
+        console.log(randomNum);
+
+
+    };
+
+    window.addEventListener('keydown', (event)=>{
+        const key = event.keyCode;
+        switch (key){
+            case 38 :
+                console.log('Up');
+                getRandomShape();
+                break;
+            case 37 :
+                console.log('Left');
+                break;
+            case 39 :
+                console.log('right');
+                break;
+            case 40 :
+                console.log('down');
+                break;
+
+
+
+        }
+    })
 </script>
 </body>
 </html>
