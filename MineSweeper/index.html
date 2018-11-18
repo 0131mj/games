@@ -60,7 +60,7 @@
             margin: 1.5rem 0;
         }
         button{
-            color: #555;
+            color: #999;
             border:1px solid #DDD;
             box-shadow: none;
             background-color: #EEE;
@@ -68,11 +68,14 @@
             border-radius: 1rem;
             outline: none;
             -webkit-tap-highlight-color: transparent;
+            opacity: 0.3;
         }
 
         button.on{
             color: #000;
             background-color: #FFF;
+            border:1px solid #AAA;
+            opacity: 1.0;
         }
 
         button:focus {outline:0;}
@@ -87,6 +90,7 @@
             background-color: red;
             color: #FFF;
             border: 0;
+            opacity: 1.0;
         }
     </style>
 </head>
@@ -97,7 +101,7 @@
     </table>
     <div id="btn-group">
         <button id="open" class="on">OPEN</button>
-        <button id="flag">FLAG</button>
+        <button id="flag"> 🚩</button>
     </div>
     <p id="game-status"></p>
     <button id="reset" onClick="window.location.reload()">
