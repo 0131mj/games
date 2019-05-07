@@ -6,11 +6,27 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
+    <style>
+        body{
+            background-color: #000;
+        }
+        #zone{
+            width:300px;
+            height:600px;
+            border-bottom:20px solid darkslateblue;
+            border-right:20px solid darkslateblue;
+            border-left:20px solid darkslateblue;
+        }
+    </style>
 </head>
 <body>
+    <div id="zone">
+
+    </div>
 <script>
     const O = true;
     const X = false;
+
     const shapes = {
         "I" : [
             [X,X,O,X,X],
@@ -18,6 +34,10 @@
             [X,X,O,X,X],
             [X,X,O,X,X],
             [X,X,X,X,X],
+        ],
+        "M" : [
+            [O,O],
+            [O,O]
         ],
         "T" : [
             [O,O,O],
@@ -28,7 +48,22 @@
             [O,O,X],
             [X,O,X],
             [X,O,O],
-        ]
+        ],
+        "S" : [
+            [X,O,O],
+            [X,O,X],
+            [O,O,X]
+        ],
+        "L" : [
+            [X,O,X],
+            [X,O,X],
+            [X,O,O],
+        ],
+        "LR" : [
+            [X,O,X],
+            [X,O,X],
+            [O,X,O],
+        ],
     }
 
     const actions = {
@@ -54,9 +89,32 @@
 
     };
 
+    const zoneSize = {
+        width  : 10,
+        height : 20,
+    }
+    
+    const row = [];
+    const col = [];
+
+    for(let i = 0; i<zoneSize.width; i++){
+        row.push('X')
+    }
+    for(let i = 0; i<zoneSize.height; i++){
+        col.push(row)
+    }
+
+    const pushShape = () => {
+
+    }
+
+    function renderZone(){
+
+    }
+
     function getRandomShape (){
 
-        const randomNum = Math.ceil(Math.random() * );
+        const randomNum = Math.ceil(Math.random() * 10);
 
         console.log(randomNum);
 
@@ -79,9 +137,6 @@
             case 40 :
                 console.log('down');
                 break;
-
-
-
         }
     })
 </script>
