@@ -232,12 +232,16 @@
 
     /* 깃발 카운트 */
 
-    function setFlagCount() {
+    function getFlagCount() {
         let flaggedCnt = 0;
         for(let i = 0; i < cellCnt; i++){
             if(hasClass(i,'flagged')){flaggedCnt++;}
         }
-        document.getElementById('bomb-cnt').innerHTML = `🚩 : ${bombCnt - flaggedCnt}`;
+        return flaggedCnt;
+    }
+
+    function setFlagCount() {
+        document.getElementById('bomb-cnt').innerHTML = `🚩 : ${bombCnt - getFlagCount()}`;
     }
 
     setFlagCount();
@@ -260,7 +264,7 @@
         const over  = index - BW;
         const under = index + BW;
 
-        Number.prototype.left = function () {return this - 1};
+        Number.prototype.left  = function () {return this - 1};
         Number.prototype.right = function () {return this + 1};
 
         switch (position) {
@@ -382,11 +386,12 @@
         e.preventDefault();
         const selectedCell = e.target;
 
-        let content = '🚩';
-        if(selectedCell.textContent === '🚩'){
-            content = '';
+        const isFlagged = selectedCell.textContent === '🚩';
+        if( !isFlagged && getFlagCount() === bombCnt ) {
+            window.alert("Full Flag");
+            return;
         }
-        selectedCell.innerHTML = content;
+        selectedCell.innerHTML = isFlagged ? '' : '🚩';
         selectedCell.classList.toggle('flagged');
 
         setFlagCount();
